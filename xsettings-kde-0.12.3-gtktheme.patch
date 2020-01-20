@@ -1,0 +1,115 @@
+diff -ur xsettings-kde-0.12.3/xsettings-kde.c xsettings-kde-0.12.3-gtktheme/xsettings-kde.c
+--- xsettings-kde-0.12.3/xsettings-kde.c	2011-10-07 01:09:07.000000000 +0200
++++ xsettings-kde-0.12.3-gtktheme/xsettings-kde.c	2012-01-18 21:38:27.000000000 +0100
+@@ -239,15 +239,12 @@
+ 	char filename[1024];
+ 	char kdeprefix[1024];
+ 	char *prefix;
+-	char color[1024];
+ 	char style[1024];
+-	char themefilename[1024];
+ 	struct passwd *password;
+ 	int i;
+ 	int user_file;
+ 	int file_index;
+ 
+-	color[0]= '\0';
+ 	kdeprefix[0]= '\0';
+ 	filename[0]= '\0';
+ 	style[0]='\0';
+@@ -386,16 +383,6 @@
+ 					}
+ 					notify = 1;
+ 				}
+-				if (strncmp(buffer,"widgetStyle=",12) == 0) {
+-
+-					/* found style */
+-					sscanf(buffer,"widgetStyle=%s", style);
+-
+-				}
+-				if (strncmp(buffer,"ColorScheme=",12) == 0) {
+-					strcpy(color, buffer+12);
+-					color[strlen(color)-1]='\0';
+-				}
+ 				notify |= readDPI(buffer);
+ 
+ 				break;
+@@ -451,59 +438,32 @@
+ 	} while (user_file == 0);
+       }
+ 
+-	if (buffer) {
+-		free (buffer);
+-	}
++	/* look for style set by kcm-gtk, enforce it through Net/ThemeName so GTK+ 3 also picks it up */
++	if (password) {
++		sprintf (filename, "%s/.gtkrc-2.0-kde4", password->pw_dir);
++		file = fopen (filename, "r");
++
++		if (file) {
++			while ((read = getline (&buffer, &len, file)) != -1) {
++				if (strncmp (buffer, "gtk-theme-name=", 15) == 0) {
++					sscanf (buffer, "gtk-theme-name=\"%1023[^\"]\"", style);
++				}
++			}
+ 
+-	if ((style[0] == '\0' || (!is_kde4 && strcmp(style, "ia_ora") == 0) || (is_kde4 && strcmp(style, "iaora-qt") == 0) || (is_kde4 && strcmp(style, "iaorakde") == 0)) && strncmp("Ia Ora ", color, 7) == 0)
+-		       	{
+-		strcpy(style, color);
+-		if (!is_kde4) {
+-			style[strlen(style)-6] = '\0';
++			fclose (file);
++			file = NULL;
+ 		}
+ 	}
+-				
+-	if (style[0]) {
+-		int gtkrc_access = 1;
+-		sprintf(themefilename, "/usr/share/themes/%s/gtk-2.0/gtkrc", style);
+ 
+-		if (password) {
+-			char gtkrc[1024];
+-			sprintf(gtkrc,"%s/.gtkrc-2.0", password->pw_dir);
+-			gtkrc_access = access (gtkrc, F_OK);
+-			/* if not .gtkrc-2.0, try KDE variant */
+-			if (gtkrc_access) {
+-				char *gtkrc_env;
+-				char *gtkrc_file;
+-				
+-				gtkrc_env = getenv ("GTK2_RC_FILES");
+-				gtkrc_file = NULL;
++	if (buffer) {
++		free (buffer);
++	}
+ 
+-				if (gtkrc_env) {
+-					do {
+-						if (gtkrc_file == NULL) {
+-							gtkrc_file = strtok (gtkrc_env, ":");
+-						}
+-						else {
+-							gtkrc_file = strtok (NULL, ":");
+-						}
+-						if (gtkrc_file != NULL) {
+-							if ((gtkrc_access = access (gtkrc_file, F_OK)) == 0) {
+-								break;
+-							}
+-						}
+-					} while (gtkrc_file != NULL );
+-				}
+-			}
++	if (style[0]) {
++		for (i = 0 ; i < max_display ; i++) {
++			xsettings_manager_set_string (managers[i], "Net/ThemeName", style);
+ 		}
+-
+-		/* do not set theme name if .gtkrc is being used */ 
+-		if (gtkrc_access && (access (themefilename, F_OK) == 0 )) {
+-			for (i = 0 ; i < max_display ; i++) {
+-				xsettings_manager_set_string (managers[i], "Net/ThemeName", style);
+-			}
+ 		notify = 1;
+-		}
+ 	}
+ 
+ 

@@ -1,0 +1,31 @@
+From: Harald Sitter <apachelogger@ubuntu.com>
+Subject: Remove pointless sleep()
+ The IM support patch from [1], imported into Mageia in [2] adds a
+ conditional sleep() call when the infinite loop runs into an empty
+ event queue which is bound to happen quite a few times.
+ .
+ This introduces pointless code and pointless wake ups as the used
+ XNextEvent function blocks on an empty queue anyway [3], thus
+ rendering the manual sleep() call superfluous.
+ .
+ [1] https://bugzilla.redhat.com/show_bug.cgi?id=727822
+ [2] http://svnweb.mageia.org/soft?view=revision&revision=2011
+ [3] http://tronche.com/gui/x/xlib/event-handling/manipulating-event-queue/XNextEvent.html
+
+Index: xsettings-kde-0.12.3/xsettings-kde.c
+===================================================================
+--- xsettings-kde-0.12.3.orig/xsettings-kde.c	2012-05-22 00:01:21.000000000 +0200
++++ xsettings-kde-0.12.3/xsettings-kde.c	2012-05-22 00:02:25.209293378 +0200
+@@ -529,11 +529,7 @@
+     int i;
+ 
+     while (1) {
+-  if (!XPending(xev->display)) {
+-        sleep(2);
+-        continue;
+-    }
+-        XNextEvent (xev->display, &xevent);
++	XNextEvent (xev->display, &xevent);
+ 
+ 	for (i = 0 ; i < max_display ; i++) {
+ 	    if (xsettings_manager_process_event (managers[i], &xevent))
