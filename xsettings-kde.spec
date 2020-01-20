@@ -2,7 +2,7 @@
 Summary: XSettings Daemon for KDE
 Name:    xsettings-kde
 Version: 0.12.3
-Release: 5%{?dist}
+Release: 7%{?dist}
 License: GPLv2+
 Group:   User Interface/Desktops 
 Source0: http://distro.ibiblio.org/pub/linux/distributions/mageia/software/xsettings-kde/%{version}/xsettings-kde-%{version}.tar.bz2 
@@ -66,6 +66,12 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 0.12.3-7
+- Mass rebuild 2014-01-24
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 0.12.3-6
+- Mass rebuild 2013-12-27
+
 * Fri Feb 15 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.12.3-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 
